@@ -1,0 +1,819 @@
+#include<iostream>
+#include<string>
+#include <fstream>
+#include <cstdlib>
+#include<conio.h>
+#include<windows.h>
+using namespace std;
+void menu();
+struct user
+{
+    string passWord;
+    string name;
+};
+//定义的用户结构体*/
+struct date   //日期结构体
+{
+    int year;
+    int month;
+    int date;
+};
+struct activity  //活动列表结构体
+{
+    string activity;
+    date eventDate;
+    int candidateOrNot;
+    int approve = 0, oppose = 0, abstain = 0;
+    int type;
+};
+struct candidate   //投票候选人结构体
+{
+    int num;
+    string candidate;
+    string name;
+    string sex;
+    string introduce;
+    int ss;   //编号，对应每个活动
+    int poll = 0;
+};
+candidate Input1()
+{
+    candidate per;
+    cin >>per.ss>> per.name >> per.sex >> per.introduce;
+    return per;
+}
+struct work
+{
+    int num;
+    string author;
+    string workname;
+    int ss;
+    int poll = 0;
+};
+activity A[20];
+candidate C[20];
+int n, i, n0, n1, s2;
+char s1, s3, s4;
+work W[100];
+void register_()//register是C++关键字 故加一下划线
+{
+    //注册
+    //清屏
+    system("cls");
+    char *password = new char[20];//password可以看做一个20字节的字符数组，即字符串
+    string name;
+    user c;
+    ifstream fin;//声明 ifstream 对象
+    fin.open("user.txr",ios::in);//关联文件
+    cout << "请输入用户名：[不能大于12个字符]"<<endl;
+    cin>>name;
+    if(name.length()<=12)
+    {
+        while(fin >> c.name >> c.passWord)//读取成功返回1
+        {
+            if(c.name==name)
+            {
+                cout <<endl<< "该用户名已被注册" <<endl;
+                register_();
+            }
+        }
+        char test ;
+        int i=0;
+        cout <<endl<< "输入密码:";
+        while((test=getch())!='\r')
+        {
+            if(test==8)//ASC2码8为退格
+            {
+                if(i>0)
+                {
+                    cout << test << " " << test;
+                    password[i--]='\0';
+                }
+            }
+            else
+            {
+                if(i<20)
+                {
+                    cout << "*" ;
+                    password[i]=test;
+                    i++;
+                }
+            }
+        }
+        password[i] = '\0';
+        cout <<endl<< "再次输入密码" ;
+        char *password2 = new char[20];
+        i=0;
+        while((test=getch())!='\r')
+        {
+            if(test==8)
+            {
+                if(i>0)
+                {
+                    cout << test << " " << test ;
+                    password2[i--]='\0';
+                }
+            }
+            else
+            {
+                if(i<20)
+                {
+                    cout << "*";
+                    password2[i]=test;
+                    i++;
+                }
+            }
+            password2[i]='\0';
+        }
+        if(strcmp(password,password2)!=0)
+        {
+
+            cout <<endl<< "密码两次输入不相同 请重新注册！";
+            Sleep(2000);
+            register_();
+        }
+        else
+        {
+            cout <<endl<< "注册成功";
+        }
+        ofstream fout;
+        fout.open("user.txr",ios_base::out|ios_base::app);
+        fout << name << " " << password << endl;
+        fout.close();//关闭文件连接，但不会删除流
+        cout <<endl<< "三秒后进入投票系统";
+        Sleep(3000);
+        menu();
+    }
+    else
+    {
+        cout<<endl<<"用户名超过12位！请重新注册";
+        Sleep(2000);
+        register_();
+    }
+}
+void login()
+{
+    system("cls");
+    char *passWord = new char [20];
+    string name;
+    cout << "用户名："<<endl;
+    cin>>name;
+    cout <<"密码："<<endl;
+    char test;
+    int i=0;
+    while((test=getch())!='\r')
+    {
+        if(test==8)//ASC2码8为退格
+        {
+            if(i>0)
+            {
+                cout << test << " " << test;
+                passWord[i--]='\0';
+            }
+        }
+        else
+        {
+            if(i<20)
+                cout << "*";
+            passWord[i]=test;
+            i++;
+        }
+    }
+    passWord[i]='\0';
+    ifstream fin;
+    fin.open("user.txr",ios_base::in);
+    if(fin.fail())
+    {
+
+    }
+    user c;
+    int f1;
+    while(fin>>c.name>>c.passWord)
+    {
+        if(c.name==name&&c.passWord==passWord)
+        {
+            cout <<endl<< "登陆成功";
+            f1=1;//登录成功标志
+            cout <<endl<< "三秒后进入主界面"<<endl;
+            Sleep(3000);
+            menu();
+        }
+    }
+    if(f1==0)//f1==0登录失败
+    {
+        cout <<endl<< "用户名或密码错误,请重新登陆";
+        Sleep(2000);
+        login();
+    }
+}
+void Initialization()
+{
+    fstream  infile;
+    infile.open("activity.txt", ios::in);
+    for (int i = 0; i < 20; i++)
+    {
+        infile >> A[i].eventDate.year;
+        infile >> A[i].eventDate.month;
+        infile >> A[i].eventDate.date;
+        infile >> A[i].activity;
+        infile >> A[i].candidateOrNot;
+        infile >> A[i].oppose;
+        infile >> A[i].approve;
+        infile >> A[i].abstain;
+        infile>>A[i].type;
+    }
+    infile.close();
+    infile.open("Candidate.txt", ios::in);
+    for (int y = 0; y < 20; y++)
+    {
+        infile >> C[y].ss;
+        infile >> C[y].poll;
+        infile>>C[y].name;
+        infile>>C[y].sex;
+        infile>>C[y].introduce;
+    }
+    infile.close();
+    infile.open("work.txt", ios::in);
+    for (int w = 0; w < 20; w++)
+    {
+        infile >> W[w].ss;
+        infile >> W[w].workname;
+        infile>>W[w].author;
+        infile>>W[w].poll;
+    }
+    infile.close();
+}
+void case1()
+{
+    Initialization();
+    int n, i, n0, n1, s2;
+    char s1, s3, s4;
+    system("cls");//清屏
+    cout << "请输入参与候选人数；";   //录入成员信息
+    cin >> n;
+    for (i = 0; i < n; i++)
+    {
+        cout << "请输入第" << i + 1 << "位候选人的参与活动序号、姓名、性别、个人介绍：" << endl;
+        C[i] = Input1();
+        C[i].num = i + 1;
+    }
+    system("cls");//清屏
+    cout << n << "位候选人的信息已经录入成功！请选择是否进行信息修改？" << endl;			//修改信息
+    cout << "a:是，进行修改。" << '\t' << "b:否，已确定信息准确。" << endl;
+    cin >> s1;
+    switch (s1)
+    {
+    case 'a':
+        system("cls");
+        while (1)
+        {
+            cout << "请输入需要修改的候选人序号。" << endl;
+            cin >> n0;
+            system("cls");
+            cout << "请重新输入第" << n0 << "位候选人的参与活动序号、姓名、性别、个人介绍：" << endl;
+            C[n0 - 1] = Input1();
+            system("cls");
+            cout << "是否继续修改？" << endl << "1.是." << '\t' << "0.否." << endl;
+            cin >> s2;
+            if (s2 == 1)
+            {
+                system("cls");
+                continue;
+            }
+            if (s2 == 0)
+            {
+                system("cls");
+                fstream outfile;
+                outfile.open("Candidate.txt", ios::out);
+                for (int z = 0; z < 20; z++)
+                {
+                    outfile << C[z].ss <<'\t';
+                    outfile << C[z].poll <<'\t';
+                    outfile << C[z].name<<'\t';
+                    outfile << C[z].sex<<'\t';
+                    outfile << C[z].introduce << '\t';
+                    outfile << endl;
+                }
+                outfile.close();
+                system("cls");//清屏
+                cout << "数据录入成功！" << endl;
+                cout <<"1秒后将返回主界面"<<endl;
+                Sleep(1000);
+                menu();
+                break;
+            }
+
+        case 'b':
+        {
+            fstream outfile;
+            outfile.open("Candidate.txt", ios::out);
+            for (int z = 0; z < 20; z++)
+            {
+                outfile<<C[z].ss<<'\t';
+                outfile<<C[z].poll<<'\t';
+                outfile << C[z].name<<'\t';
+                outfile << C[z].sex<<'\t';
+                outfile << C[z].introduce << '\t';
+                outfile << endl;
+            }
+            outfile. close();
+            system("cls");//清屏
+            cout << "数据录入成功！" << endl;
+            cout <<"1秒后将返回主界面"<<endl;
+            Sleep(1000);
+            menu();
+            break;
+        }
+
+    }
+    }
+}
+work Input2()
+{
+    work w;
+    cin >>w.ss>> w.author >> w.workname;
+    return w;
+}
+void case2()
+{
+    system("cls");//清屏
+    cout << "请输入参与作品数；"; //录入作品信息
+    cin >> n;
+    for (i = 0; i < n; i++)
+    {
+        cout << "请输入第" << i+1 << "个作品的活动序号、作品名称、作者:" << endl;
+        W[i] = Input2();
+        //W[i].ss = i;
+    }
+    cout << n << "个作品的信息已经录入成功！请选择是否进行信息修改？" << endl; //修改信息
+    cout << "a:是，进行修改。" << '\t' << "b:否，已确定信息准确。" << endl;
+    cin >> s3;
+    switch (s3)
+    {
+    case 'a':
+        system("cls");
+        while (1)
+        {
+            cout << "请输入需要修改的作品序号:" << endl;
+            cin >> n1;
+            system("cls");
+            cout << "请重新输入第" << n1 << "个作品的作品名称、作者：" << endl;
+            W[n1 - 1] = Input2();
+            system("cls");
+            cout << "是否继续修改？" << endl << "1.是." << '\t' << "0.否.";
+            cin >> s4;
+            system("cls");
+            if (s4 == 1)
+            {
+                system("cls");
+                continue;
+            }
+            else if (s4 == 0)
+            {
+                system("cls");
+                fstream outfile;
+                outfile.open("work.txt", ios::out);
+                for (int z = 0; z < 20; z++)
+                {
+                    outfile<<W[z].ss<<'\t';
+                    outfile<<W[z].workname<<'\t';
+                    outfile << W[z].author<<'\t';
+                    outfile << W[z].poll<<'\t';
+                    outfile << endl;
+                }
+                outfile.close();
+                continue;
+                system("cls");//清屏
+                cout << "数据录入成功！" << endl;
+                cout <<"1秒后将返回主界面"<<endl;
+                Sleep(1000);
+                menu();
+                break;
+            }
+        }
+    case 'b':
+        fstream outfile;
+        outfile.open("work.txt", ios::out);
+        for (int z = 0; z < 20; z++)
+        {
+            outfile<<W[z].ss<<'\t';
+            outfile<<W[z].workname<<'\t';
+            outfile << W[z].author<<'\t';
+            outfile << W[z].poll<<'\t';
+            outfile << endl;
+        }
+        outfile. close();
+        system("cls");//清屏
+        cout << "数据录入成功！" << endl;
+        cout <<"1秒后将返回主界面"<<endl;
+        Sleep(1000);
+        menu();
+        break;
+    }
+}
+void showli()
+{
+    char Y;
+    cout<<"a.输入/修改候选人"<<'\t'<<"b.输入/修改作品"<<'\t'<<"c.返回"<<endl;
+    cin>>Y;
+    if(Y=='a')
+        case1();
+    else if(Y=='b')
+        case2();
+    else
+        menu();
+}
+void voteSuccess()
+{
+    cout<<"投票成功！"<<endl;
+    fstream outfile;
+    outfile.open("activity.txt", ios::out);
+    for (int i = 0; i < 20; i++)
+    {
+        outfile << A[i].eventDate.year<<'\t';
+        outfile << A[i].eventDate.month << '\t';
+        outfile << A[i].eventDate.date << '\t';
+        outfile << A[i].activity << '\t';
+        outfile << A[i].candidateOrNot << '\t';
+        outfile << A[i].oppose << '\t';
+        outfile << A[i].approve << '\t';
+        outfile << A[i].abstain << '\t';
+        outfile<<A[i].type<<'\t';
+        outfile << endl;
+    }
+    outfile.close();
+    cout<<"1.继续投票 2.返回主界面 其他键.退出系统"<<endl;
+    int choiceNum1;
+    cin>>choiceNum1;
+    switch(choiceNum1)
+    {
+        void vote();
+    case 1:
+        vote();
+        break;
+
+    case 2:
+        menu();
+        break;
+
+    default:
+        return;
+    }
+}
+void voteSuccessWork()
+{
+    cout<<"投票成功！"<<endl;
+    fstream outfile;
+    outfile.open("work.txt", ios::out);
+    for (int z = 0; z < 20; z++)
+    {
+        outfile << W[z].ss<<'\t';
+        outfile<<W[z].workname<<'\t';
+        outfile << W[z].author<<'\t';
+        outfile << W[z].poll << '\t';
+        outfile << endl;
+    }
+    outfile.close();
+    cout<<"1.继续投票 2.返回主界面 其他键.退出系统"<<endl;
+    int choiceNum1;
+    cin>>choiceNum1;
+    switch(choiceNum1)
+    {
+        void vote();
+    case 1:
+        vote();
+        break;
+
+    case 2:
+        menu();
+        break;
+
+    default:
+        return;
+    }
+}
+void vote()  //投票函数
+{
+    Initialization();
+    int num = 0;
+    int select;
+    //清屏
+    system("cls");
+    cout<<"请选择投票内容："<<endl;
+    cout<<"1.人物海选"<<'\t'<<"2.作品投票"<<'\t'<< "3.活动投票"<<'\t'<<"4.返回"<<endl;
+    cin>>select;
+    //清屏
+    system("cls");
+    switch(select)
+    {
+    case(1):
+    {
+        int num=0;
+        cout<<"序号"<<'\t'<<"年"<<'\t' <<"月"<<'\t'<<"日" <<'\t' <<"活动名称"<<endl;
+        for(int i=0; i<20; i++)
+        {
+            if(A[i].type==1)
+            {
+                cout<<i<<'\t';
+                cout << A[i].eventDate.year << '\t';
+                cout << A[i].eventDate.month << '\t';
+                cout << A[i].eventDate.date << '\t';
+                cout << A[i].activity << '\t';
+                cout << endl;
+                num++;
+            }
+        }
+        break;
+    }
+    case(2):
+    {
+        int num=0;
+        cout<<"序号"<<'\t'<<"年"<<'\t' <<"月"<<'\t'<<"日" <<'\t' <<"活动名称"<<endl;
+        for(int i=0; i<20; i++)
+        {
+            if(A[i].type==2)
+            {
+                cout<<i<<'\t';
+                cout << A[i].eventDate.year << '\t';
+                cout << A[i].eventDate.month << '\t';
+                cout << A[i].eventDate.date << '\t';
+                cout << A[i].activity << '\t';
+                cout << endl;
+                num++;
+            }
+        }
+        break;
+    }
+    case(3):
+    {
+        int num=0;
+        cout<<"序号"<<'\t'<<"年"<<'\t' <<"月"<<'\t'<<"日" <<'\t' <<"活动名称"<<endl;
+        for(int i=0; i<20; i++)
+        {
+            if(A[i].type==3)
+            {
+                cout<<i<<'\t';
+                cout << A[i].eventDate.year << '\t';
+                cout << A[i].eventDate.month << '\t';
+                cout << A[i].eventDate.date << '\t';
+                cout << A[i].activity << '\t';
+                cout << endl;
+            }
+        }
+        break;
+    }
+    case (4):
+    {
+        menu();
+        break;
+    }
+    }
+    cout << "输入序号查看详情" << endl;
+    cout << "输入23返回投票类型选择" << endl;
+    int ch;
+    cin >> ch;
+    if (ch == 23)
+    {
+        system("cls");
+        vote();
+    }
+    else if(A[ch].type==1)
+    {
+        //清屏
+        system("cls");
+        cout << "候选人如下：" << endl;
+        for (int y = 0; y < 20; y++) //输出候选人
+        {
+            if (C[y].ss == ch)
+            {
+                cout<<y<<'\t'<< C[y].name << endl;
+            }
+        }
+        int nameNumber;
+        int i = 1;
+        while(i)
+        {
+            cout << "请输入你要投的候选人的序号：" << endl;
+            cin >> nameNumber;
+            if (nameNumber < 20 && C[nameNumber].ss == ch && nameNumber >= 0)
+            {
+                cout << "投票成功！" << endl;
+                C[nameNumber].poll++;
+                fstream outfile;
+                outfile.open("Candidate.txt", ios::out);
+                for (int z = 0; z < 20; z++)
+                {
+                    outfile << C[z].candidate<<'\t';
+                    outfile << C[z].ss<<'\t';
+                    outfile << C[z].poll << '\t';
+                    outfile<<C[z].name<<'\t';
+                    outfile<<C[z].sex<<'\t';
+                    outfile<<C[z].introduce<<'\t';
+                    outfile << endl;
+                }
+                outfile.close();
+                cout<<"1.继续投票 2.返回主界面 其他键.退出系统"<<endl;
+                int choiceNum1;
+                cin>>choiceNum1;
+                switch(choiceNum1)
+                {
+                case 1:
+                    vote();
+                    break;
+
+                case 2:
+                    menu();
+                    break;
+
+                default:
+                    return;
+                }
+                i=0;
+            }
+            else
+                cout << "输入错误序号！请重新输入" << endl;
+        }
+
+    }
+    else if(A[ch].type==3)
+    {
+        //清屏
+        system("cls");
+        int voteNumber;
+        int i=1;
+        while(i)
+        {
+            cout << "请输入选项的序号：" << endl;
+            cout << "1.反对" << endl;
+            cout << "2.赞同" << endl;
+            cout << "3.弃权" << endl;
+            cin >> voteNumber;
+            switch (voteNumber)
+            {
+            case(1):
+            {
+                A[ch].oppose++;
+                voteSuccess();
+                i=0;
+                break;
+            }
+            case(2):
+            {
+                A[ch].approve++;
+                voteSuccess();
+                i=0;
+                break;
+            }
+            case(3):
+            {
+                A[ch].abstain++;
+                voteSuccess();
+                i=0;
+                break;
+            }
+            default:
+                cout << "输入无效序号，投票失败！请重新输入" << endl;
+                break;
+            }
+        }
+    }
+    else if(A[ch].type==2)
+    {
+        cout << "参与作品如下：" << endl;
+        cout<<"序号"<<'\t'<<"作品名称"<<'\t'<<"票数" <<endl;
+        for (int y = 0; y < 20; y++) //输出作品
+        {
+            if (W[y].ss ==ch )
+                cout <<y<<'\t'<< W[y].workname<<'\t'<<W[y].poll << endl;
+        }
+        int nameNumber1;
+        int i = 1;
+        while(i)
+        {
+            cout << "请输入你要投的作品序号：" << endl;
+            cin >> nameNumber1;
+            if (nameNumber1 < 20 && W[nameNumber1].ss == ch && nameNumber1 >= 0)
+            {
+                W[nameNumber1].poll++;
+                voteSuccessWork();
+                i=0;
+            }
+            else
+                cout << "输入错误序号！请重新输入" << endl;
+        }
+    }
+}
+void showResult()
+{
+    Initialization();
+    char H;
+    int t;
+    cout<<"序号"<<'\t'<<"年"<<'\t' <<"月"<<'\t'<<"日" <<'\t' <<"活动名称"<<endl;
+    for(int i=0; i<20; i++)
+    {
+        if(A[i].eventDate.year==0)
+            continue;
+        cout<<i<<'\t';
+        cout << A[i].eventDate.year << '\t';
+        cout << A[i].eventDate.month << '\t';
+        cout << A[i].eventDate.date << '\t';
+        cout << A[i].activity << '\t';
+        cout << endl;
+    }
+    cout << "输入序号查看投票结果：" << endl;
+    cin >> t;
+    system("cls");//清屏
+    if (A[t].type==3)
+    {
+        cout << "反对：" << A[t].oppose << endl;
+        cout << "赞成：" << A[t].approve<< endl;
+        cout << "弃权：" << A[t].abstain << endl;
+    }
+    else if(A[t].type==1)
+    {
+    	cout<<"候选人名称"<<'\t'<<"票数"<<endl;
+        for (int y = 0; y < 20; y++) //输出候选人
+        {
+            if (C[y].ss ==t )
+                cout << C[y].name<<'\t'<<C[y].poll << endl;
+        }
+    }
+    else if(A[t].type==2)
+    {
+    	cout<<"作品名称"<<'\t'<<"票数"<<endl; 
+        for (int y = 0; y < 20; y++) //输出作品
+        {
+            if (W[y].ss ==t )
+                cout << W[y].workname<<'\t'<<W[y].poll << endl;
+        }
+    }
+    cout<<"是否返回？输入y或Y则返回结果展示界面 输入M则回到主菜单 输入N则退出"<<endl;
+    cin>>H;
+    if(H=='y'||H=='Y')
+    {
+        system("cls");
+        showResult();
+    }
+    if(H=='M')
+    {
+        system("cls");
+        menu();
+    }
+    if(H=='N')
+    {
+        system("pause");
+    }
+}
+void menuBefore()   //菜单
+{
+    int A;
+    cout<<"***************************************************************************************"<<endl;
+    cout<<"**投票系统**张可欣、唐伊凤、李强**1806** 20181003063 20181003060 20181003034 **"<<endl;
+    cout<<"登录注册：李强  输入功能:唐伊凤 投票及查看结果：张可欣"<<endl;
+    cout<<"*******************************CopyRight:广东外语外贸大学******************************"<<endl;
+    cout<<"                                 欢迎进入投票系统！" <<endl;
+    cout<<"                                 输入序号启用相应的功能：" <<endl;
+    cout<<"                                 1.登录"<<endl;
+    cout<<"                                 2.注册" <<endl;
+    cin >> A;
+    switch (A)
+    {
+    case(1):
+        login();
+        break;         //作品投票
+    case(2):
+        register_();
+        break;
+    }
+}
+void menu()
+{
+    system("cls");
+    int A;
+    cout<<"欢迎使用投票系统！" <<endl;
+    cout<<"输入序号启用相应的功能：" <<endl;
+    cout<<"1.输入候选人/作品"<<endl;
+    cout <<"2.投票" << endl;
+    cout <<"3.查看投票结果" << endl;
+    cout<<"4.退出"<<endl;
+    cin >> A;
+    switch (A)
+    {
+    case(1):
+        showli();
+        break;
+    case(2):
+        vote();
+        break;
+    case(3):
+        showResult();
+        break;
+    case(4):
+        system("pause");
+    }
+}
+int main()
+{
+    menuBefore();
+    return 0;
+}
